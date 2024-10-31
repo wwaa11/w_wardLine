@@ -5,6 +5,7 @@ use DateTime;
 use DB;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Http;
 
 class WebController extends Controller
 {
@@ -43,7 +44,7 @@ class WebController extends Controller
     }
     function getWard()
     {
-        $wardArr = ["CCU","ICU","W06","W07","W09","W10","W11","W12","W14","W15","W16B","W17B"];
+        $wardArr = ["W06","W07","W09","W10","W11","W12","W14","W15","W16B","W17B"];
         $ward = DB::connection('SSB')
             ->table('DNSYSCONFIG')
             ->where('CtrlCode', '42201')
@@ -95,6 +96,7 @@ class WebController extends Controller
             ->orderBy('HNIPD_MASTER.ActiveWard','asc')
             ->orderBy('HNIPD_MASTER.HN','asc')
             ->orderBy('HNPAT_INFO.HN','asc')
+            // ->take(1)
             ->get();
         
         $HNarray = [];
@@ -233,5 +235,66 @@ class WebController extends Controller
         $data->save();
 
         return response()->json(['status' =>'success','data'=> $data]);
+    }
+
+    function getList(Request $request)
+    {
+        $token = $request->header('token');
+        if($token !== env('API_TOKEN')){
+            return response()->json(['status'=> 'error','message'=> 'api token mismatch!']);
+        }
+
+        $filter = (object)[
+            'date' => $request->date,
+            'ward' => $request->ward,
+            'hn' => $request->hn,
+            'status' => $request->status
+        ];
+        $output = $this->getData($filter);
+        $ward = $this->getWard();
+
+        return response()->json(['status'=> 'success','list'=> $output, 'ward'=> $ward]);
+    }
+    function mainOutsite()
+    {
+        $filter = (object)[
+            'date' => null,
+            'ward' => null,
+            'hn' => null,
+            'status' => null
+        ];
+        $response = Http::withHeaders([
+            'token' =>  env('API_TOKEN'),
+        ])->post( 'http://172.20.1.12/w_linecheck/api/getlist', ['date' => null , 'ward' => null, 'hn' => null, 'status' => null])->json();
+        $ward = [];
+        foreach ($response['ward'] as $key => $value) {
+            $ward[] = (object)[
+                'Code' => $value['Code'],
+                'name' => $value['name']
+            ];
+        }
+
+        return view('index', ['ward' => $ward, 'data' => $response['list'], 'filter' => $filter]);
+    }
+    function mainOutfilter(Request $request)
+    {
+        $filter = (object)[
+            'date' => $request->date,
+            'ward' => $request->ward,
+            'hn' => $request->hn,
+            'status' => $request->status
+        ];
+        $response = Http::withHeaders([
+            'token' =>  env('API_TOKEN'),
+        ])->post( 'http://172.20.1.12/w_linecheck/api/getlist', ['date' => $filter->date , 'ward' => $filter->ward, 'hn' => $filter->hn, 'status' => $filter->status])->json();
+        $ward = [];
+        foreach ($response['ward'] as $key => $value) {
+            $ward[] = (object)[
+                'Code' => $value['Code'],
+                'name' => $value['name']
+            ];
+        }
+
+        return view('index', ['ward' => $ward, 'data' => $response['list'], 'filter' => $filter]);
     }
 }

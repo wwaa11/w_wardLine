@@ -48,6 +48,10 @@
                 </select>
                 <button class="p-3 border-2 text-green-600 border-green-600 w-full rounded" type="button"
                     onclick="filterForm()">Filter</button>
+                <div>
+                    <button class="p-3 text-red-600 underline underline-offset-2" type="button"
+                        onclick="clearFn()">Clear</button>
+                </div>
             </div>
         </form>
         <table class="w-full table my-6">
@@ -158,6 +162,10 @@
                 }
             }
         });
+    }
+
+    function clearFn() {
+        window.location.replace('{{ env('APP_URL') }}/')
     }
 </script>
 
