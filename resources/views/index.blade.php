@@ -73,37 +73,42 @@
             </thead>
             <tbody>
                 @foreach ($data as $i => $item)
-                    <tr class="border border-gray-400 border-collapse">
-                        <td class="p-3 text-center">{{ $i + 1 }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['AN'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['HN'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['Bed'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['Gender'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['Name'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['Age'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['Ward'] }}</td>
-                        <td class="p-3 border-x border-gray-400">{{ $item['Right'] }}</td>
-                        <td class="p-3 border-x border-gray-400">
-                            <div>
-                                @foreach ($item['ARcode'] as $ar)
-                                    <div class="w-full">{{ $ar }}</div>
-                                @endforeach
-                            </div>
-                        </td>
-                        @if ($item['Line'] == 1)
-                            <td class="border-x border-gray-400 bg-green-600 text-center text-white">TRUE</td>
-                        @elseif($item['Line'] == 0)
-                            <td class="border-x border-gray-400 bg-red-600 text-center text-white">FALSE</td>
-                            <td class="p-3 border-x border-x-gray-400 text-center">
-                                <button onclick="denailFN('{{ $item['HN'] }}')"
-                                    class="w-full p-3 border-2 text-blue-600 border-blue-600 rounded">Denied</button>
+                    @if ($item['type'] == 1)
+                        <tr class="border border-gray-400 border-collapse">
+                            <td class="p-3 text-center">{{ $item['index'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['AN'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['HN'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Bed'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Gender'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Name'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Age'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Ward'] }}</td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Right'] }}</td>
+                            <td class="p-3 border-x border-gray-400">
+                                <div class="w-full">{{ $item['ARcode'] }}</div>
                             </td>
-                        @else
-                            <td class="p-3 border-x border-gray-400 bg-gray-500 text-white text-center">Denied</td>
-                            <td class="p-3 border-x border-gray-400">{{ $item['Memo'] }}</td>
-                        @endif
+                            @if ($item['Line'] == 1)
+                                <td colspan="2" class="border-x border-gray-400 bg-green-600 text-center text-white">
+                                    TRUE</td>
+                            @elseif($item['Line'] == 0)
+                                <td class="border-x border-gray-400 bg-red-600 text-center text-white">FALSE</td>
+                                <td class="p-3 border-x border-x-gray-400 text-center">
+                                    <button onclick="denailFN('{{ $item['HN'] }}')"
+                                        class="w-full p-3 border-2 text-blue-600 border-blue-600 rounded">Denied</button>
+                                </td>
+                            @else
+                                <td class="p-3 border-x border-gray-400 bg-gray-500 text-white text-center">Denied</td>
+                                <td class="p-3 border-x border-gray-400">{{ $item['Memo'] }}</td>
+                            @endif
 
-                    </tr>
+                        </tr>
+                    @else
+                        <tr class="border border-gray-400 border-collapse">
+                            <td class="p-3" colspan="8"></td>
+                            <td class="p-3 border-x border-gray-400">{{ $item['Right'] }}</td>
+                            <td class="p-3 border-x border-gray-400" colspan="3">{{ $item['ARcode'] }}</td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>

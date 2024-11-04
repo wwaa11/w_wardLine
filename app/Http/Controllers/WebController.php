@@ -44,7 +44,7 @@ class WebController extends Controller
     }
     function getWard()
     {
-        $wardArr = ["W06","W07","W09","W10","W11","W12","W14","W15","W16B","W17B"];
+        $wardArr = ["W06","W07","W09","W10","W11","W12","W14","W15","W15B","W16","W16B","W17B"];
         $ward = DB::connection('SSB')
             ->table('DNSYSCONFIG')
             ->where('CtrlCode', '42201')
@@ -61,10 +61,11 @@ class WebController extends Controller
     function getData($filter)
     {
         mb_internal_encoding('UTF-8');
-        $data = DB::connection('SSB')
+        $data = DB::connection(name: 'SSB')
             ->table('HNIPD_MASTER')
             ->leftjoin('HNPAT_INFO', 'HNIPD_MASTER.HN', '=', 'HNPAT_INFO.HN')
             ->leftjoin('HNPAT_NAME', 'HNPAT_INFO.HN', '=', 'HNPAT_NAME.HN')
+            ->leftjoin('HNIPD_RIGHT', 'HNIPD_MASTER.AN', '=', 'HNIPD_RIGHT.AN')
             ->where('HNPAT_NAME.SuffixSmall', 0)
             ->whereNull('DischargeDateTime')
             ->where(function ($query) use ($filter) {
@@ -82,56 +83,55 @@ class WebController extends Controller
                 'HNIPD_MASTER.AdmDateTime',
                 'HNIPD_MASTER.AN',
                 'HNIPD_MASTER.HN',
+                'HNPAT_INFO.Gender',
+                'HNPAT_INFO.BirthDateTime',
+                'HNPAT_NAME.FirstName',
+                'HNPAT_NAME.LastName',
+                'HNPAT_INFO.LineID',
                 'HNIPD_MASTER.AdmWard',
                 'HNIPD_MASTER.AdmHNBedNo',
                 'HNIPD_MASTER.ActiveWard',
                 'HNIPD_MASTER.ActiveHNBedNo',
-                'HNIPD_MASTER.DefaultRightCode',
-                'HNPAT_INFO.Gender',
-                'HNPAT_INFO.BirthDateTime',
-                'HNPAT_INFO.LineID',
-                'HNPAT_NAME.FirstName',
-                'HNPAT_NAME.LastName'
+                'HNIPD_RIGHT.RightCode',
+                'HNIPD_RIGHT.ARCode',
+                // 'HNIPD_MASTER.DefaultRightCode',
             )
             ->orderBy('HNIPD_MASTER.ActiveWard','asc')
             ->orderBy('HNIPD_MASTER.HN','asc')
-            ->orderBy('HNPAT_INFO.HN','asc')
-            // ->take(1)
+            ->orderBy('HNIPD_RIGHT.ARCode','asc')
+            // ->take(2)
             ->get();
-        
-        $HNarray = [];
+
         $output = [];
+        $HNarray = [];
+        $index = 0;
         $ARdata = DB::connection('BACK')->table('ARMASTER')->get();
         foreach($data as $item){
-            $HNarray[] = $item->HN;
-            $arName = [];
-            $getRight = DB::connection('SSB')
-                ->table('HNIPD_RIGHT')
-                ->where('AN', $item->AN)
-                ->where('RightCode', $item->DefaultRightCode)
-                ->select('AN','RightCode','ARCode')
-                ->get();
-                
-            $setRight = collect($getRight)->first();
-            foreach($getRight as $ar){
-                if($ar->ARCode !== null){
-                    $getAR = collect($ARdata)->where('ARCode', $ar->ARCode)->first();
-                    $arName[] = mb_substr($getAR->LocalName, 1);
-                }
+            $getAR = collect($ARdata)->where('ARCode', $item->ARCode)->first();
+            if(!in_array($item->HN, $HNarray)){
+                $index = $index+ 1;
+                $HNarray[] = $item->HN;
+                $output[] = [
+                    'type' => 1,
+                    'index' => $index,
+                    'AN' => $item->AN,
+                    'HN' => $item->HN,
+                    'Bed' => $item->ActiveHNBedNo,
+                    'Gender' => ($item->Gender == '1') ?'หญิง':'ชาย',
+                    'Name' => $this->setName($item->FirstName, $item->LastName),
+                    'Age' => $this->setAge($item->BirthDateTime),
+                    'Ward' => $item->ActiveWard,
+                    'ARcode' => ($getAR !== null) ? mb_substr($getAR->LocalName, 1) : null,
+                    'Right' => $this->setRight($item->RightCode),
+                    'Line' => ($item->LineID == null) ? false : true,
+                ];
+            }else{
+                $output[] = [
+                    'type' => 2,
+                    'ARcode' => ($getAR !== null) ? mb_substr($getAR->LocalName, 1) : null,
+                    'Right' => $this->setRight($item->RightCode),
+                ];
             }
-
-            $output[] = [
-                'AN' => $item->AN,
-                'HN' => $item->HN,
-                'Bed' => $item->ActiveHNBedNo,
-                'Gender' => ($item->Gender == '1') ?'หญิง':'ชาย',
-                'Name' => $this->setName($item->FirstName, $item->LastName),
-                'Age' => $this->setAge($item->BirthDateTime),
-                'Ward' => $item->ActiveWard,
-                'Right' => $this->setRight($setRight->RightCode),
-                'ARcode' => $arName,
-                'Line' => ($item->LineID == null) ? false : true,
-            ];
         }
 
         if(count($output) == 0 && $filter->hn !== null){
