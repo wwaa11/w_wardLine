@@ -239,12 +239,9 @@ class WebController extends Controller
     }
     function denialData(Request $request)
     {
-        $status = $request->status;
-        $data = Transaction::firstOrCreate([
-            'hn' => $request->hn,
-            'status' => $status,
-            'memo' => $request->reason,
-        ]);
+        $data = Transaction::firstOrCreate(['hn' => $request->hn,]);
+        $data->status = $request->status;
+        $data->memo = $request->reason;
         $data->save();
 
         return response()->json(['status' =>'success','data'=> $data]);

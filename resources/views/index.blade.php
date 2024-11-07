@@ -104,9 +104,20 @@
                                 </td>
                             @else
                                 <td class="p-3 border-x border-gray-400 bg-gray-500 text-white text-center">
-                                    {{ $item['Line'] }}</td>
+                                    {{ $item['Line'] }}
+                                </td>
                                 <td class="p-3 border-x border-gray-400">
-                                    {{ $item['Memo'] }}
+                                    <div class="flex gap-2">
+                                        <button onclick="denailFN('{{ $item['HN'] }}','other')"
+                                            class="w-full p-1 border-2 text-blue-600 border-blue-600 rounded">Update
+                                        </button>
+                                        <button onclick="denailFN('{{ $item['HN'] }}','cancel')"
+                                            class="w-full p-1 border-2 text-red-600 border-red-600 rounded">Denied
+                                        </button>
+                                    </div>
+                                    <div class="p-3 text-red-600">
+                                        {{ $item['Memo'] }}
+                                    </div>
                                 </td>
                             @endif
                         </tr>
