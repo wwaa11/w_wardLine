@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->string('hn');
-            $table->enum('status', ["wait","true","denial"])->default("wait");
+            $table->string('status')->default("wait");
             $table->text('memo');
             $table->timestamps();
         });

@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <div class="w-full md:w-11/12 m-auto">
+    <div class="w-full m-auto px-2">
         <div class="flex">
             <div>
                 <img src="{{ asset('images/side.png') }}" alt="logo" class="h-16 my-3">
@@ -44,7 +44,8 @@
                     <option value="">Please Select</option>
                     <option value="false" @if ($filter->status == 'false') selected @endif>Wait</option>
                     <option value="true" @if ($filter->status == 'true') selected @endif>Success</option>
-                    <option value="denail" @if ($filter->status == 'denail') selected @endif>Denied</option>
+                    <option value="Denied" @if ($filter->status == 'Denied') selected @endif>Denied</option>
+                    <option value="Other" @if ($filter->status == 'Other') selected @endif>Other</option>
                 </select>
                 <button class="p-3 border-2 text-green-600 border-green-600 w-full rounded" type="button"
                     onclick="filterForm()">Filter</button>
@@ -68,11 +69,11 @@
                     <td class="border-x border-gray-400">Right</td>
                     <td class="border-x border-gray-400">ARcode</td>
                     <td class="border-x border-gray-400">LineID</td>
-                    <td class="border-x border-gray-400">Denied</td>
+                    <td class="border-x border-gray-400">Status</td>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($data as $i => $item)
+                @foreach ($data as $item)
                     @if ($item['type'] == 1)
                         <tr class="border border-gray-400 border-collapse">
                             <td class="p-3 text-center">{{ $item['index'] }}</td>
@@ -87,26 +88,33 @@
                             <td class="p-3 border-x border-gray-400">
                                 <div class="w-full">{{ $item['ARcode'] }}</div>
                             </td>
-                            @if ($item['Line'] == 1)
-                                <td colspan="2" class="border-x border-gray-400 bg-green-600 text-center text-white">
-                                    TRUE</td>
-                            @elseif($item['Line'] == 0)
+                            @if ($item['Line'] == 0)
                                 <td class="border-x border-gray-400 bg-red-600 text-center text-white">FALSE</td>
-                                <td class="p-3 border-x border-x-gray-400 text-center">
-                                    <button onclick="denailFN('{{ $item['HN'] }}')"
-                                        class="w-full p-3 border-2 text-blue-600 border-blue-600 rounded">Denied</button>
+                                <td colspan="2" class="p-3 border-x border-x-gray-400 text-center flex gap-2">
+                                    <button onclick="denailFN('{{ $item['HN'] }}','other')"
+                                        class="w-full p-3 border-2 text-blue-600 border-blue-600 rounded">Other
+                                    </button>
+                                    <button onclick="denailFN('{{ $item['HN'] }}','cancel')"
+                                        class="w-full p-3 border-2 text-red-600 border-red-600 rounded">Denied
+                                    </button>
+                                </td>
+                            @elseif($item['Line'] == 1)
+                                <td class="border-x border-gray-400 bg-green-600 text-center text-white" colspan="2">
+                                    TRUE
                                 </td>
                             @else
-                                <td class="p-3 border-x border-gray-400 bg-gray-500 text-white text-center">Denied</td>
-                                <td class="p-3 border-x border-gray-400">{{ $item['Memo'] }}</td>
+                                <td class="p-3 border-x border-gray-400 bg-gray-500 text-white text-center">
+                                    {{ $item['Line'] }}</td>
+                                <td class="p-3 border-x border-gray-400">
+                                    {{ $item['Memo'] }}
+                                </td>
                             @endif
-
                         </tr>
                     @else
                         <tr class="border border-gray-400 border-collapse">
                             <td class="p-3" colspan="8"></td>
                             <td class="p-3 border-x border-gray-400">{{ $item['Right'] }}</td>
-                            <td class="p-3 border-x border-gray-400" colspan="3">{{ $item['ARcode'] }}</td>
+                            <td class="p-3 border-x border-gray-400" colspan="4">{{ $item['ARcode'] }}</td>
                         </tr>
                     @endif
                 @endforeach
@@ -126,15 +134,15 @@
         document.getElementById("filterForm").submit();
     }
 
-    function denailFN(hn) {
+    function denailFN(hn, status) {
         Swal.fire({
-            title: "Confirm, denail HN: " + hn + " ?",
+            title: "Confirm, update HN: " + hn + " ?",
             icon: "warning",
             input: "text",
             showCancelButton: true,
             confirmButtonColor: "gray",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, denail it!"
+            confirmButtonText: "Yes, update it!"
         }).then(async (result) => {
             if (result.isConfirmed) {
                 if (result.value == '') {
@@ -146,13 +154,14 @@
                 } else {
                     const formData = new FormData()
                     formData.append('hn', hn)
+                    formData.append('status', status)
                     formData.append('reason', result.value)
                     const res = await axios.post("{{ env('APP_URL') }}" + "/denail", formData, {
                         "Content-Type": "multipart/form-data"
                     }).then((res) => {
                         if (res.data.status == 'success') {
                             Swal.fire({
-                                title: "Denail!",
+                                title: "Updated!",
                                 text: "HN : " + hn + " has been updated.",
                                 icon: "success",
                                 confirmButtonText: 'Confirm',

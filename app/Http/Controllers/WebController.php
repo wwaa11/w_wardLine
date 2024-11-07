@@ -99,7 +99,6 @@ class WebController extends Controller
             ->orderBy('HNIPD_MASTER.ActiveWard','asc')
             ->orderBy('HNIPD_MASTER.HN','asc')
             ->orderBy('HNIPD_RIGHT.ARCode','asc')
-            // ->take(2)
             ->get();
 
         $output = [];
@@ -108,6 +107,18 @@ class WebController extends Controller
         $ARdata = DB::connection('BACK')->table('ARMASTER')->get();
         foreach($data as $item){
             $getAR = collect($ARdata)->where('ARCode', $item->ARCode)->first();
+            $getTransaction = Transaction::where('hn', $item->HN)->first();
+            if($getTransaction !== null){
+                if($getTransaction->status == 'cancel'){
+                    $setstatus = 'Denied';
+                }elseif($getTransaction->status == 'other'){
+                    $setstatus = 'Other';
+                }
+                $memo = $getTransaction->memo;
+            }else{
+                $setstatus = ($item->LineID == null) ? false : true;
+                $memo = null;
+            }
             if(!in_array($item->HN, $HNarray)){
                 $index = $index+ 1;
                 $HNarray[] = $item->HN;
@@ -123,13 +134,15 @@ class WebController extends Controller
                     'Ward' => $item->ActiveWard,
                     'ARcode' => ($getAR !== null) ? mb_substr($getAR->LocalName, 1) : null,
                     'Right' => $this->setRight($item->RightCode),
-                    'Line' => ($item->LineID == null) ? false : true,
+                    'Line' => $setstatus,
+                    'Memo' => $memo
                 ];
             }else{
                 $output[] = [
                     'type' => 2,
                     'ARcode' => ($getAR !== null) ? mb_substr($getAR->LocalName, 1) : null,
                     'Right' => $this->setRight($item->RightCode),
+                    'Line' => $setstatus,
                 ];
             }
         }
@@ -165,14 +178,6 @@ class WebController extends Controller
                 ];
             }
         }
-
-        $getTransaction = Transaction::whereIn('hn', $HNarray)->get();
-        foreach ($getTransaction as $transaction) {
-            $keyData = collect($output)->where('HN', $transaction->hn)->keys()->first();
-            $output[$keyData]['Line'] = $transaction->status;
-            $output[$keyData]['Memo'] = $transaction->memo;
-        }
-
         if($filter->status !== null){
             if($filter->status == 'false'){
                 foreach ($output as $key => $value) {
@@ -188,9 +193,16 @@ class WebController extends Controller
                     }
                 }
             }
-            elseif($filter->status == 'denail'){
+            elseif($filter->status == 'Denied'){
                 foreach ($output as $key => $value) {
-                    if($value['Line'] !== 'denial'){
+                    if($value['Line'] !== 'Denied'){
+                        unset($output[$key]);
+                    }
+                }
+            }
+            elseif($filter->status == 'Other'){
+                foreach ($output as $key => $value) {
+                    if($value['Line'] !== 'Other'){
                         unset($output[$key]);
                     }
                 }
@@ -227,9 +239,10 @@ class WebController extends Controller
     }
     function denialData(Request $request)
     {
+        $status = $request->status;
         $data = Transaction::firstOrCreate([
             'hn' => $request->hn,
-            'status' => 'denial',
+            'status' => $status,
             'memo' => $request->reason,
         ]);
         $data->save();
