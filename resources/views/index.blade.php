@@ -30,7 +30,7 @@
                     value="{{ $filter->date }}">
                 <div class="inline-block align-middle">Ward: </div>
                 <select class="w-full p-3 border-2 border-gray-400 rounded" name="ward">
-                    <option value="">Please Select</option>
+                    <option value="">All Ward</option>
                     @foreach ($ward as $item)
                         <option value="{{ $item->Code }}" @if ($filter->ward == $item->Code) selected @endif>
                             {{ $item->name }}</option>
@@ -41,7 +41,7 @@
                     value="{{ $filter->hn }}">
                 <div>Status: </div>
                 <select class="w-full p-3 border-2 border-gray-400 rounded" name="status">
-                    <option value="">Please Select</option>
+                    <option value="">All Status</option>
                     <option value="false" @if ($filter->status == 'false') selected @endif>Wait</option>
                     <option value="true" @if ($filter->status == 'true') selected @endif>Success</option>
                     <option value="Denied" @if ($filter->status == 'Denied') selected @endif>Denied</option>
