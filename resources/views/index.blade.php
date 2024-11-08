@@ -167,6 +167,7 @@
                     formData.append('hn', hn)
                     formData.append('status', status)
                     formData.append('reason', result.value)
+                    console.log(hn, status, result.value)
                     const res = await axios.post("{{ env('APP_URL') }}" + "/denail", formData, {
                         "Content-Type": "multipart/form-data"
                     }).then((res) => {

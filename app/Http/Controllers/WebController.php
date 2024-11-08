@@ -239,7 +239,11 @@ class WebController extends Controller
     }
     function denialData(Request $request)
     {
-        $data = Transaction::firstOrCreate(['hn' => $request->hn,]);
+        $data = Transaction::where('hn', $request->hn)->first();
+        if($data == null){
+            $data = new Transaction;
+        }
+        $data->hn = $request->hn;
         $data->status = $request->status;
         $data->memo = $request->reason;
         $data->save();
