@@ -108,16 +108,18 @@ class WebController extends Controller
         foreach($data as $item){
             $getAR = collect($ARdata)->where('ARCode', $item->ARCode)->first();
             $getTransaction = Transaction::where('hn', $item->HN)->first();
-            if($getTransaction !== null){
+            if($getTransaction !== null && $item->LineID == null){
                 if($getTransaction->status == 'cancel'){
                     $setstatus = 'Denied';
                 }elseif($getTransaction->status == 'other'){
                     $setstatus = 'Other';
                 }
                 $memo = $getTransaction->memo;
+                $memo_date = $getTransaction->updated_at->format('d/m/y');
             }else{
                 $setstatus = ($item->LineID == null) ? false : true;
                 $memo = null;
+                $memo_date = null;
             }
             if(!in_array($item->HN, $HNarray)){
                 $index = $index+ 1;
@@ -135,7 +137,8 @@ class WebController extends Controller
                     'ARcode' => ($getAR !== null) ? mb_substr($getAR->LocalName, 1) : null,
                     'Right' => $this->setRight($item->RightCode),
                     'Line' => $setstatus,
-                    'Memo' => $memo
+                    'Memo' => $memo,
+                    'MemoDate' => $memo_date
                 ];
             }else{
                 $output[] = [
@@ -146,7 +149,6 @@ class WebController extends Controller
                 ];
             }
         }
-
         if(count($output) == 0 && $filter->hn !== null){
             $data = DB::connection('SSB')
                 ->table('HNPAT_INFO')
@@ -164,7 +166,23 @@ class WebController extends Controller
                 ->first();
             if($data !== null){
                 $HNarray[] = $data->HN;
+                $getTransaction = Transaction::where('hn', $data->HN)->first();
+                if($getTransaction !== null && $data->LineID == null){
+                    if($getTransaction->status == 'cancel'){
+                        $setstatus = 'Denied';
+                    }elseif($getTransaction->status == 'other'){
+                        $setstatus = 'Other';
+                    }
+                    $memo = $getTransaction->memo;
+                    $memo_date = $getTransaction->updated_at->format('d/m/y');
+                }else{
+                    $setstatus = ($data->LineID == null) ? false : true;
+                    $memo = null;
+                    $memo_date = null;
+                }
                 $output[] = [
+                    'type' => 1,
+                    'index' => 1,
                     'AN' => null,
                     'HN' => $data->HN,
                     'Bed' => null,
@@ -173,8 +191,10 @@ class WebController extends Controller
                     'Age' => $this->setAge($data->BirthDateTime),
                     'Ward' => null,
                     'Right' => null,
-                    'ARcode' => [],
-                    'Line' => ($data->LineID == null) ? false : true
+                    'ARcode' => null,
+                    'Line' => $setstatus,
+                    'Memo' => $memo,
+                    'MemoDate' => $memo_date
                 ];
             }
         }

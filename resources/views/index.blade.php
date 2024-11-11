@@ -115,8 +115,9 @@
                                             class="w-full p-1 border-2 text-red-600 border-red-600 rounded">Denied
                                         </button>
                                     </div>
-                                    <div class="p-3 text-red-600">
-                                        {{ $item['Memo'] }}
+                                    <div class="py-3">
+                                        <div>{{ $item['Memo'] }}</div>
+                                        <div class="text-red-600">{{ $item['MemoDate'] }}</div>
                                     </div>
                                 </td>
                             @endif
