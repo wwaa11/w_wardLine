@@ -17,10 +17,17 @@
 <body>
     <div class="w-full m-auto px-2">
         <div class="flex">
-            <div>
+            <div class="flex-grow">
                 <img src="{{ asset('images/side.png') }}" alt="logo" class="h-16 my-3">
             </div>
-            <div class="flex-1 text-end my-3 text-xl font-bold">PR9 LineID Check</div>
+            <div class="flex-shrink text-end my-3  font-bold">
+                <div class="text-xl">
+                    PR9 LineID Check
+                </div>
+                <div class="p-3 font-bold text-red-600 cursor-pointer text-end" onclick="logoutFn()">
+                    ({{ auth()->user()->userid }} {{ auth()->user()->name }}) Logout
+                </div>
+            </div>
         </div>
         <form method="GET" action="{{ env('APP_URL') }}/filter" id="filterForm">
             <div class="flex gap-2 shadow p-3 align-middle">
@@ -135,6 +142,12 @@
     </div>
 </body>
 <script>
+    async function logoutFn() {
+        const formData = new FormData();
+        const res = await axios.post("{{ env('APP_URL') }}/unauth", formData);
+        window.location = "{{ env('APP_URL') }}/auth";
+    }
+
     function filterForm() {
         Swal.fire({
             title: "Please, Wait.",

@@ -5,7 +5,9 @@ use DateTime;
 use DB;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 class WebController extends Controller
 {
@@ -231,11 +233,45 @@ class WebController extends Controller
 
         return $output;
     }
+    function Auth()
+    {
+
+        return view('login');
+    }
+    function AuthCheck(Request $request)
+    {
+        $userid = $request->userid;
+        $password = $request->password;
+        $response = Http::withHeaders([
+            'token' => env('API_TOKEN_STAFF')
+        ])->post('http://172.20.1.12/dbstaff/api/auth', [
+            'userid' => $userid,
+            'password' => $password,
+        ])->object();
+        if($response->status == 1){
+            session(['userid' => $response->user->userid , 'name' => $response->user->name]);
+
+            $user = User::firstOrCreate([
+                'userid' => $response->user->userid,
+                'name' => $response->user->name,
+            ]);
+
+            if (Auth::loginUsingId($user->id)) {
+
+                return response()->json(['status' => 1 , 'text' => 'Authentication Success!'],200);
+            }else{
+
+                return response()->json(['status'=> 0,'text'=> 'Authentication Success , User not found!'],200);
+            }
+        }
+
+        return response()->json(['status' => 0 , 'text' => 'Authentication Failed!'],200);
+    }
     function main()
     {
         $filter = (object)[
             'date' => null,
-            'ward' => null,
+            'ward' => '-',
             'hn' => null,
             'status' => null
         ];
@@ -293,13 +329,13 @@ class WebController extends Controller
     {
         $filter = (object)[
             'date' => null,
-            'ward' => null,
+            'ward' => '-',
             'hn' => null,
             'status' => null
         ];
         $response = Http::withHeaders([
             'token' =>  env('API_TOKEN'),
-        ])->post( 'http://172.20.1.12/w_linecheck/api/getlist', ['date' => null , 'ward' => null, 'hn' => null, 'status' => null])->json();
+        ])->post( 'http://172.20.1.12/w_linecheck/api/getlist', ['date' => null , 'ward' => '-', 'hn' => null, 'status' => null])->json();
         $ward = [];
         foreach ($response['ward'] as $key => $value) {
             $ward[] = (object)[
